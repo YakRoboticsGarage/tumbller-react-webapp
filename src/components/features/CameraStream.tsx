@@ -65,18 +65,50 @@ export function CameraStream({ robot }: CameraStreamProps) {
 
 // Separate component for polling stream
 function PollingCameraStream({ cameraIp }: { cameraIp: string }) {
+  const [imageUrl, setImageUrl] = useState<string>('')
   const [hasError, setHasError] = useState(false)
-  const [imageKey, setImageKey] = useState(0)
+  const [failCount, setFailCount] = useState(0)
+  const maxFails = 5 // Allow 5 consecutive failures before showing error
 
-  // Force image refresh every second by changing key
   useEffect(() => {
-    const interval = setInterval(() => {
-      setImageKey((prev) => prev + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+    // Reset on camera IP change
+    setHasError(false)
+    setFailCount(0)
+    setImageUrl('')
 
-  const imageUrl = `${robotApi.getCameraImageUrl(cameraIp)}?t=${imageKey}`
+    const fetchImage = () => {
+      const url = `${robotApi.getCameraImageUrl(cameraIp)}?t=${Date.now()}`
+
+      // Preload the image
+      const img = new Image()
+
+      img.onload = () => {
+        setImageUrl(url)
+        setFailCount(0) // Reset fail count on success
+        setHasError(false)
+      }
+
+      img.onerror = () => {
+        setFailCount((prev) => {
+          const newCount = prev + 1
+          if (newCount >= maxFails) {
+            setHasError(true)
+          }
+          return newCount
+        })
+      }
+
+      img.src = url
+    }
+
+    // Fetch first image immediately
+    fetchImage()
+
+    // Poll every second
+    const interval = setInterval(fetchImage, 1000)
+
+    return () => clearInterval(interval)
+  }, [cameraIp])
 
   if (hasError) {
     return (
@@ -90,29 +122,53 @@ function PollingCameraStream({ cameraIp }: { cameraIp: string }) {
         <Text fontSize="sm" color="gray.500">
           Endpoint: {robotApi.getCameraImageUrl(cameraIp)}
         </Text>
+        <Text fontSize="xs" color="gray.400" mt={2}>
+          Try switching to "Full Interface" mode
+        </Text>
       </VStack>
+    )
+  }
+
+  if (!imageUrl) {
+    return (
+      <Box
+        position="relative"
+        width="100%"
+        maxW="800px"
+        minH="400px"
+        bg="gray.200"
+        borderRadius="md"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Text color="gray.500">Loading camera stream...</Text>
+      </Box>
     )
   }
 
   return (
     <Box
-      position="relative"
+      display="flex"
+      justifyContent="center"
       width="100%"
-      maxW="800px"
-      bg="black"
-      borderRadius="md"
-      overflow="hidden"
     >
       <Box
-        as="img"
-        src={imageUrl}
-        alt="Robot camera stream"
-        width="100%"
-        height="auto"
-        display="block"
-        onError={() => setHasError(true)}
-        onLoad={() => setHasError(false)}
-      />
+        position="relative"
+        maxW="800px"
+        bg="black"
+        borderRadius="md"
+        overflow="hidden"
+      >
+        <Box
+          as="img"
+          src={imageUrl}
+          alt="Robot camera stream"
+          width="100%"
+          height="auto"
+          display="block"
+        />
+      </Box>
     </Box>
   )
 }

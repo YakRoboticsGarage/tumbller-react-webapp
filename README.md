@@ -55,8 +55,8 @@ You can optionally configure a default robot that will be loaded automatically o
 2. Edit `.env` and set your robot's IP addresses:
    ```env
    VITE_DEFAULT_ROBOT_NAME=Tumbller-1
-   VITE_DEFAULT_MOTOR_IP=192.168.8.100
-   VITE_DEFAULT_CAMERA_IP=192.168.8.143
+   VITE_DEFAULT_MOTOR_IP=192.168.1.100
+   VITE_DEFAULT_CAMERA_IP=192.168.1.101
    ```
 
 3. The robot will be automatically added when you first open the app
@@ -228,7 +228,7 @@ Follow the patterns established in:
 
 ## License
 
-MIT
+Apache 2.0 - See LICENSE file for details
 
 ## Related Repositories
 
