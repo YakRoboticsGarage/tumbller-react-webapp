@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRobotStore } from '../../stores/robotStore'
 import type { RobotConfig } from '../../types'
+import { generateUUID } from '../../utils/uuid'
 
 const robotFormSchema = z.object({
   name: z.string().min(1, 'Robot name is required'),
@@ -52,7 +53,7 @@ export function AddRobotForm({ onSuccess }: AddRobotFormProps) {
 
   const onSubmit = async (data: RobotFormData) => {
     const config: RobotConfig = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: data.name,
       motorIp: data.motorIp,
       cameraIp: data.cameraIp,

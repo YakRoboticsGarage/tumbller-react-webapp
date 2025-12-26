@@ -59,7 +59,7 @@ export const robotApi = {
     const url = this.getCameraImageUrl(cameraIp)
 
     try {
-      const response = await fetch(url, {
+      await fetch(url, {
         method: 'HEAD',
         mode: 'no-cors',
         signal: AbortSignal.timeout(3000),
@@ -77,7 +77,7 @@ export const robotApi = {
     const url = `http://${motorIp}/motor/stop`
 
     try {
-      const response = await fetch(url, {
+      await fetch(url, {
         method: 'GET',
         mode: 'no-cors',
         signal: AbortSignal.timeout(2000),

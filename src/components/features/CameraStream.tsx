@@ -67,7 +67,7 @@ export function CameraStream({ robot }: CameraStreamProps) {
 function PollingCameraStream({ cameraIp }: { cameraIp: string }) {
   const [imageUrl, setImageUrl] = useState<string>('')
   const [hasError, setHasError] = useState(false)
-  const [failCount, setFailCount] = useState(0)
+  const [, setFailCount] = useState(0)
   const maxFails = 5 // Allow 5 consecutive failures before showing error
 
   useEffect(() => {

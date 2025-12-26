@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { RobotConfig, RobotState } from '../types'
 import { env, hasDefaultRobotConfig } from '../utils/env'
+import { generateUUID } from '../utils/uuid'
 
 interface RobotStore {
   robots: Map<string, RobotState>
@@ -33,7 +34,7 @@ export const useRobotStore = create<RobotStore>()(
         // Check if we have default config in .env
         if (hasDefaultRobotConfig()) {
           const defaultConfig: RobotConfig = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             name: env.defaultRobotName!,
             motorIp: env.defaultMotorIp!,
             cameraIp: env.defaultCameraIp!,
