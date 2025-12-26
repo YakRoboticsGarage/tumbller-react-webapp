@@ -31,55 +31,55 @@ export function MotorControls({ robot }: MotorControlsProps) {
 
   return (
     <VStack spacing={4}>
-      <Text fontSize="lg" fontWeight="semibold">
+      <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold">
         Motor Controls
       </Text>
 
-      <Grid templateColumns="repeat(3, 1fr)" gap={3} maxW="340px">
+      <Grid templateColumns="repeat(3, 1fr)" gap={2} maxW={{ base: "280px", md: "340px" }} w="full">
         {/* Top row - Forward */}
         <div />
         <Button
-          size="lg"
+          size={{ base: "md", md: "lg" }}
           colorScheme="brand"
           onClick={() => handleCommand('forward')}
           isLoading={motorMutation.isPending && motorMutation.variables === 'forward'}
           leftIcon={<ArrowUpIcon />}
         >
-          Forward
+          <Text display={{ base: "none", sm: "inline" }}>Forward</Text>
         </Button>
         <div />
 
         {/* Middle row - Left and Right */}
         <Button
-          size="lg"
+          size={{ base: "md", md: "lg" }}
           colorScheme="brand"
           onClick={() => handleCommand('left')}
           isLoading={motorMutation.isPending && motorMutation.variables === 'left'}
           leftIcon={<ArrowBackIcon />}
         >
-          Left
+          <Text display={{ base: "none", sm: "inline" }}>Left</Text>
         </Button>
         <div />
         <Button
-          size="lg"
+          size={{ base: "md", md: "lg" }}
           colorScheme="brand"
           onClick={() => handleCommand('right')}
           isLoading={motorMutation.isPending && motorMutation.variables === 'right'}
           leftIcon={<ArrowForwardIcon />}
         >
-          Right
+          <Text display={{ base: "none", sm: "inline" }}>Right</Text>
         </Button>
 
         {/* Bottom row - Back */}
         <div />
         <Button
-          size="lg"
+          size={{ base: "md", md: "lg" }}
           colorScheme="brand"
           onClick={() => handleCommand('back')}
           isLoading={motorMutation.isPending && motorMutation.variables === 'back'}
           leftIcon={<ArrowDownIcon />}
         >
-          Back
+          <Text display={{ base: "none", sm: "inline" }}>Back</Text>
         </Button>
         <div />
       </Grid>

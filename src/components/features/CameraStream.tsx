@@ -15,29 +15,31 @@ export function CameraStream({ robot }: CameraStreamProps) {
 
   return (
     <VStack spacing={4} align="stretch">
-      <HStack justify="space-between" align="center">
-        <Text fontSize="lg" fontWeight="semibold">
+      <VStack spacing={3} align="stretch">
+        <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold">
           Camera Feed
         </Text>
-        <HStack spacing={2}>
+        <HStack spacing={2} flexWrap="wrap">
           <Button
-            size="sm"
+            size={{ base: "xs", md: "sm" }}
             variant={displayMode === 'iframe' ? 'solid' : 'outline'}
             colorScheme="brand"
             onClick={() => setDisplayMode('iframe')}
+            fontSize={{ base: "xs", md: "sm" }}
           >
             Full Interface
           </Button>
           <Button
-            size="sm"
+            size={{ base: "xs", md: "sm" }}
             variant={displayMode === 'stream' ? 'solid' : 'outline'}
             colorScheme="brand"
             onClick={() => setDisplayMode('stream')}
+            fontSize={{ base: "xs", md: "sm" }}
           >
             Stream Only
           </Button>
         </HStack>
-      </HStack>
+      </VStack>
 
       {displayMode === 'iframe' ? (
         <Box
@@ -51,7 +53,7 @@ export function CameraStream({ robot }: CameraStreamProps) {
             as="iframe"
             src={streamUrl}
             width="100%"
-            height="600px"
+            height={{ base: "300px", md: "600px" }}
             border="none"
             title="ESP-CAM Interface"
           />

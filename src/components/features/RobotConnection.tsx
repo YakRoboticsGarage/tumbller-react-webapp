@@ -81,13 +81,13 @@ export function RobotConnection({ robot }: RobotConnectionProps) {
 
   return (
     <VStack spacing={4} align="stretch">
-      <HStack justify="space-between" align="center" wrap="wrap" gap={4}>
-        <HStack spacing={3} flex={1}>
-          <Text fontSize="lg" fontWeight="semibold">
+      <VStack spacing={3} align="stretch">
+        <HStack spacing={2} flexWrap="wrap">
+          <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold">
             Robot Status
           </Text>
           <Box
-            px={3}
+            px={{ base: 2, md: 3 }}
             py={1}
             borderRadius="md"
             bg={status.bg}
@@ -96,45 +96,48 @@ export function RobotConnection({ robot }: RobotConnectionProps) {
           >
             <HStack spacing={2}>
               {status.icon}
-              <Text fontSize="sm" fontWeight="medium" color={status.color}>
+              <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="medium" color={status.color}>
                 {status.text}
               </Text>
             </HStack>
           </Box>
         </HStack>
 
-        <Box>
+        <Box width={{ base: "full", md: "auto" }}>
           {robot.connectionStatus === 'online' ? (
             <Button
               colorScheme="red"
               variant="outline"
-              size="md"
+              size={{ base: "sm", md: "md" }}
               onClick={handleDisconnect}
+              width={{ base: "full", md: "auto" }}
             >
               Disconnect
             </Button>
           ) : robot.connectionStatus === 'connecting' ? (
             <Button
               colorScheme="brand"
-              size="md"
+              size={{ base: "sm", md: "md" }}
               isLoading={true}
               loadingText="Connecting..."
+              width={{ base: "full", md: "auto" }}
             >
               Connecting...
             </Button>
           ) : (
             <Button
               colorScheme="brand"
-              size="md"
+              size={{ base: "sm", md: "md" }}
               onClick={handleConnect}
               isLoading={isChecking}
               loadingText="Checking..."
+              width={{ base: "full", md: "auto" }}
             >
               {robot.connectionStatus === 'offline' ? 'Retry Connection' : 'Connect to Robot'}
             </Button>
           )}
         </Box>
-      </HStack>
+      </VStack>
 
       {robot.connectionStatus === 'offline' && (
         <Box p={4} bg="red.50" borderRadius="md" borderWidth="1px" borderColor="red.200">

@@ -19,7 +19,7 @@ export function LogoutButton() {
       onClick={handleSignOut}
       colorScheme="orange"
       variant="outline"
-      size="md"
+      size={{ base: "sm", md: "md" }}
     >
       Log Out
     </Button>

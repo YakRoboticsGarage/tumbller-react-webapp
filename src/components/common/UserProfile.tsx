@@ -42,13 +42,13 @@ export function UserProfile() {
   const displayAvatar = (userInfo.avatar as string) || (userInfo.picture as string);
 
   return (
-    <HStack spacing={3}>
+    <HStack spacing={2}>
       <Avatar
-        size="sm"
+        size={{ base: "xs", md: "sm" }}
         name={displayName}
         src={displayAvatar}
       />
-      <VStack spacing={0} align="flex-start">
+      <VStack spacing={0} align="flex-start" display={{ base: "none", md: "flex" }}>
         <Text fontSize="sm" fontWeight="semibold" color="gray.700">
           {displayName}
         </Text>

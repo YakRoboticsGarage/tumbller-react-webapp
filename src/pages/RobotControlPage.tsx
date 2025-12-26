@@ -58,22 +58,28 @@ export function RobotControlPage() {
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
+    <Container maxW="container.xl" py={{ base: 4, md: 8 }} px={{ base: 4, md: 6 }}>
       <VStack spacing={6} align="stretch">
-        <HStack justify="space-between" wrap="wrap" gap={4}>
-          <Heading size="xl">Tumbller Robot Control</Heading>
-          <HStack spacing={4}>
+        <VStack spacing={4} align="stretch">
+          <Heading size={{ base: "lg", md: "xl" }}>Tumbller Robot Control</Heading>
+          <HStack spacing={2} flexWrap="wrap" justify="flex-start">
             {isAuthEnabled && (
               <>
                 <UserProfile />
                 <LogoutButton />
               </>
             )}
-            <Button leftIcon={<AddIcon />} colorScheme="brand" onClick={onOpen}>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="brand"
+              onClick={onOpen}
+              size={{ base: "sm", md: "md" }}
+              flexShrink={0}
+            >
               Add Robot
             </Button>
           </HStack>
-        </HStack>
+        </VStack>
 
         {robotList.length === 0 ? (
           <Card>
@@ -92,15 +98,16 @@ export function RobotControlPage() {
           <>
             <Card>
               <CardBody>
-                <HStack spacing={4}>
-                  <Box flex={1}>
-                    <Text mb={2} fontWeight="medium">
+                <VStack spacing={4} align="stretch">
+                  <Box>
+                    <Text mb={2} fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>
                       Select Robot:
                     </Text>
                     <Select
                       value={activeRobotId || ''}
                       onChange={(e) => handleRobotChange(e.target.value)}
                       placeholder="Select a robot"
+                      size={{ base: "md", md: "md" }}
                     >
                       {robotList.map((robot) => (
                         <option key={robot.config.id} value={robot.config.id}>
@@ -110,11 +117,17 @@ export function RobotControlPage() {
                     </Select>
                   </Box>
                   {activeRobotId && (
-                    <Button colorScheme="red" variant="outline" onClick={handleRemoveRobot}>
+                    <Button
+                      colorScheme="red"
+                      variant="outline"
+                      onClick={handleRemoveRobot}
+                      size={{ base: "sm", md: "md" }}
+                      width={{ base: "full", md: "auto" }}
+                    >
                       Remove Robot
                     </Button>
                   )}
-                </HStack>
+                </VStack>
               </CardBody>
             </Card>
 
@@ -123,13 +136,18 @@ export function RobotControlPage() {
                 <CardBody>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4}>
+                      <Heading size={{ base: "sm", md: "md" }} mb={4}>
                         {activeRobot.config.name}
                       </Heading>
-                      <HStack spacing={8} fontSize="sm" color="brown.600">
+                      <VStack
+                        spacing={2}
+                        align="flex-start"
+                        fontSize={{ base: "xs", md: "sm" }}
+                        color="brown.600"
+                      >
                         <Text>Motor: {activeRobot.config.motorIp}</Text>
                         <Text>Camera: {activeRobot.config.cameraIp}</Text>
-                      </HStack>
+                      </VStack>
                     </Box>
 
                     <Divider />
