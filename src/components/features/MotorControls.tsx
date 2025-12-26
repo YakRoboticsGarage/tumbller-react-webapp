@@ -1,0 +1,94 @@
+import { Button, Grid, VStack, Text, useToast } from '@chakra-ui/react'
+import { useMutation } from '@tanstack/react-query'
+import { ArrowUpIcon, ArrowDownIcon, ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { robotApi } from '../../services/robotApi'
+import type { MotorCommand, RobotState } from '../../types'
+
+interface MotorControlsProps {
+  robot: RobotState
+}
+
+export function MotorControls({ robot }: MotorControlsProps) {
+  const toast = useToast()
+
+  const motorMutation = useMutation({
+    mutationFn: (command: MotorCommand) =>
+      robotApi.sendMotorCommand(robot.config.motorIp, command),
+    onError: (error: Error) => {
+      toast({
+        title: 'Motor command failed',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    },
+  })
+
+  const handleCommand = (command: MotorCommand) => {
+    motorMutation.mutate(command)
+  }
+
+  return (
+    <VStack spacing={4}>
+      <Text fontSize="lg" fontWeight="semibold">
+        Motor Controls
+      </Text>
+
+      <Grid templateColumns="repeat(3, 1fr)" gap={3} maxW="340px">
+        {/* Top row - Forward */}
+        <div />
+        <Button
+          size="lg"
+          colorScheme="brand"
+          onClick={() => handleCommand('forward')}
+          isLoading={motorMutation.isPending && motorMutation.variables === 'forward'}
+          leftIcon={<ArrowUpIcon />}
+        >
+          Forward
+        </Button>
+        <div />
+
+        {/* Middle row - Left and Right */}
+        <Button
+          size="lg"
+          colorScheme="brand"
+          onClick={() => handleCommand('left')}
+          isLoading={motorMutation.isPending && motorMutation.variables === 'left'}
+          leftIcon={<ArrowBackIcon />}
+        >
+          Left
+        </Button>
+        <div />
+        <Button
+          size="lg"
+          colorScheme="brand"
+          onClick={() => handleCommand('right')}
+          isLoading={motorMutation.isPending && motorMutation.variables === 'right'}
+          leftIcon={<ArrowForwardIcon />}
+        >
+          Right
+        </Button>
+
+        {/* Bottom row - Back */}
+        <div />
+        <Button
+          size="lg"
+          colorScheme="brand"
+          onClick={() => handleCommand('back')}
+          isLoading={motorMutation.isPending && motorMutation.variables === 'back'}
+          leftIcon={<ArrowDownIcon />}
+        >
+          Back
+        </Button>
+        <div />
+      </Grid>
+
+      {motorMutation.isPending && (
+        <Text fontSize="sm" color="brown.600">
+          Sending command...
+        </Text>
+      )}
+    </VStack>
+  )
+}
