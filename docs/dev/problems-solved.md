@@ -302,6 +302,97 @@ grep -r 'colorScheme="blue"' src/
 
 ---
 
+## Problem 6: Logto Authentication Infinite Reload Loop
+
+**Symptom:** After successful login via Logto, the robot control page continuously reloaded, showing "Checking authentication..." spinner repeatedly. Clearing localStorage temporarily stopped the loop.
+
+**Root Cause:** Logto's `useLogto()` hook's `isLoading` state oscillates between `true` and `false` even after successful authentication, causing ProtectedRoute to repeatedly switch between loading spinner and rendered content.
+
+**Console Pattern:**
+```
+[ProtectedRoute] Auth state: { isLoading: false, isAuthenticated: true }
+[ProtectedRoute] Auth state: { isLoading: true, isAuthenticated: true }
+[ProtectedRoute] Auth state: { isLoading: false, isAuthenticated: true }
+(repeats infinitely)
+```
+
+**Investigation:**
+
+1. **Initial attempts:**
+   - Removed trailing slash from Logto endpoint ❌
+   - Added 10-second timeout in ProtectedRoute ❌
+   - Simplified CallbackPage to match official sample ❌
+   - Removed React StrictMode (double-renders) ❌
+   - Added error handling in UserProfile ✓ (helped but didn't solve)
+
+2. **Key discovery:**
+   - `useLogto()` hook was being called in BOTH ProtectedRoute AND RobotControlPage
+   - Double hook invocation caused state oscillation
+   - Removing one call helped but loop persisted
+
+3. **Root cause identified:**
+   - OAuth/OIDC SDKs (Auth0, Logto) toggle `isLoading` during token refresh and state revalidation
+   - ProtectedRoute was **too reactive** to these transient loading states
+   - Needed to ignore `isLoading` changes after initial authentication check
+
+**Solution:**
+
+Implemented a "latch" mechanism using `hasInitiallyLoaded` state:
+
+```typescript
+// src/components/common/ProtectedRoute.tsx
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, error } = useAuth();
+  const isAuthEnabled = useAuthEnabled();
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+  // Track when we've completed the initial load
+  useEffect(() => {
+    if (!isLoading && !hasInitiallyLoaded) {
+      console.log('[ProtectedRoute] Initial load complete');
+      setHasInitiallyLoaded(true);
+    }
+  }, [isLoading, hasInitiallyLoaded]);
+
+  // Show loading spinner ONLY on the very first load
+  if (!hasInitiallyLoaded && isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // After initial load, ignore isLoading toggles
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  // User is authenticated, render protected content
+  // Even if isLoading toggles afterward, we stay on this page
+  return <>{children}</>;
+}
+```
+
+**Why This Works:**
+1. On first render: `hasInitiallyLoaded = false`, so we respect `isLoading`
+2. When `isLoading` first becomes `false`: Set `hasInitiallyLoaded = true`
+3. After that: Even if `isLoading` toggles, we ignore it because `hasInitiallyLoaded = true`
+4. The authenticated page stays rendered, unaffected by background state changes
+
+**Additional Cleanup:**
+- Removed redundant `useAuth()` call from RobotControlPage (already inside ProtectedRoute)
+- Removed conditional `isAuthenticated` rendering since ProtectedRoute guarantees auth
+- Simplified header to show UserProfile and LogoutButton without checks
+
+**Lesson Learned:**
+- OAuth SDKs perform background operations (token refresh, state sync) that toggle loading states
+- Components should only react to `isLoading` during **initial** authentication check
+- After authentication is confirmed, ignore transient loading states
+- Don't call authentication hooks multiple times in the component tree
+
+**File Modified:**
+- `src/components/common/ProtectedRoute.tsx`
+- `src/pages/RobotControlPage.tsx`
+
+---
+
 ## Common Debugging Patterns
 
 ### 1. Connection Issues

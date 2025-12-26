@@ -8,6 +8,7 @@ A React web application for controlling Tumbller robots that run on ESP32S3 (mot
 - **Motor Controls**: Four-directional movement controls (Forward, Back, Left, Right)
 - **Live Camera Stream**: Real-time video feed from ESP-CAM
 - **Persistent Storage**: Robot configurations saved in browser local storage
+- **Optional Authentication**: Logto integration (enable when needed)
 - **Modern UI**: Built with Chakra UI for a clean, responsive interface
 
 ## Tech Stack
@@ -62,6 +63,21 @@ You can optionally configure a default robot that will be loaded automatically o
 3. The robot will be automatically added when you first open the app
 
 **Note**: If you skip this step, you can still add robots manually through the UI.
+
+### Optional: Enable Authentication
+
+By default, the app runs without authentication. To enable Logto:
+
+1. Set up a Logto application (see [Logto Integration Guide](docs/Logto_Integration_Guide.md))
+2. Update `.env`:
+   ```env
+   VITE_ENABLE_AUTH=true
+   VITE_LOGTO_ENDPOINT=https://your-tenant.logto.app
+   VITE_LOGTO_APP_ID=your-app-id
+   ```
+3. Restart the dev server
+
+See [docs/Logto_Integration_Guide.md](docs/Logto_Integration_Guide.md) for detailed setup.
 
 ### Other Commands
 

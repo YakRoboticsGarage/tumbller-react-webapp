@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { theme } from './theme'
 import { RobotControlPage } from './pages/RobotControlPage'
+import { CallbackPage } from './pages/CallbackPage'
+import { ProtectedRoute } from './components/common/ProtectedRoute'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,7 +21,15 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<RobotControlPage />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <RobotControlPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/callback" element={<CallbackPage />} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>

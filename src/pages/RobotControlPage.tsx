@@ -24,7 +24,10 @@ import { AddRobotForm } from '../components/features/AddRobotForm'
 import { CameraStream } from '../components/features/CameraStream'
 import { MotorControls } from '../components/features/MotorControls'
 import { RobotConnection } from '../components/features/RobotConnection'
+import { LogoutButton } from '../components/common/LogoutButton'
+import { UserProfile } from '../components/common/UserProfile'
 import { useRobotStore } from '../stores/robotStore'
+import { useAuthEnabled } from '../hooks/useAuth'
 
 export function RobotControlPage() {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -33,6 +36,8 @@ export function RobotControlPage() {
   const setActiveRobot = useRobotStore((state) => state.setActiveRobot)
   const removeRobot = useRobotStore((state) => state.removeRobot)
   const initializeDefaultRobot = useRobotStore((state) => state.initializeDefaultRobot)
+
+  const isAuthEnabled = useAuthEnabled()
 
   // Initialize default robot from .env on first load
   useEffect(() => {
@@ -55,11 +60,19 @@ export function RobotControlPage() {
   return (
     <Container maxW="container.xl" py={8}>
       <VStack spacing={6} align="stretch">
-        <HStack justify="space-between">
+        <HStack justify="space-between" wrap="wrap" gap={4}>
           <Heading size="xl">Tumbller Robot Control</Heading>
-          <Button leftIcon={<AddIcon />} colorScheme="brand" onClick={onOpen}>
-            Add Robot
-          </Button>
+          <HStack spacing={4}>
+            {isAuthEnabled && (
+              <>
+                <UserProfile />
+                <LogoutButton />
+              </>
+            )}
+            <Button leftIcon={<AddIcon />} colorScheme="brand" onClick={onOpen}>
+              Add Robot
+            </Button>
+          </HStack>
         </HStack>
 
         {robotList.length === 0 ? (

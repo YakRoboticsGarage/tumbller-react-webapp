@@ -9,6 +9,13 @@ How the Tumbller Robot Control application is structured.
 │         React Web Application              │
 │         (Browser: localhost:5173)           │
 │                                             │
+│  ┌──────────────────────────────────────┐  │
+│  │    Auth Layer (Optional - Logto)     │  │
+│  │    - AuthProvider                    │  │
+│  │    - ProtectedRoute                  │  │
+│  └──────────────────────────────────────┘  │
+│         │                                   │
+│         ↓                                   │
 │  ┌──────────────┐      ┌──────────────┐    │
 │  │  UI Layer    │      │  State Layer │    │
 │  │  (Chakra UI) │ ←──→ │  (Zustand)   │    │
@@ -46,7 +53,42 @@ How the Tumbller Robot Control application is structured.
 
 ## Key Design Decisions
 
-### 1. Separation of Motor and Camera IPs
+### 1. Optional Authentication with Logto
+
+**Decision:** Authentication is completely optional, controlled by environment variable.
+
+**Rationale:**
+- Not all users need authentication (single-user local networks)
+- Reduces complexity for basic use cases
+- Allows progressive enhancement (add auth when needed)
+- No breaking changes to existing setups
+
+**Implementation:**
+```typescript
+// Auth is opt-in via environment variable
+const isAuthEnabled = String(import.meta.env.VITE_ENABLE_AUTH) === 'true';
+
+// AuthProvider conditionally wraps app
+if (!isAuthEnabled) {
+  return <>{children}</>;  // No auth overhead
+}
+
+return <LogtoProvider config={config}>{children}</LogtoProvider>;
+```
+
+**When to Enable:**
+- Multi-user environments
+- Public-facing deployments
+- Shared robot access
+- Compliance requirements
+
+**Infinite Loop Prevention:**
+- OAuth SDKs (Logto, Auth0) toggle `isLoading` during token refresh
+- Solution: "Latch" mechanism with `hasInitiallyLoaded` state
+- Only show loading spinner on initial check, ignore subsequent toggles
+- Prevents reload loops while maintaining proper loading UX
+
+### 2. Separation of Motor and Camera IPs
 
 **Why:** ESP32S3 and ESP-CAM are separate microcontrollers with independent network interfaces.
 
@@ -55,7 +97,7 @@ How the Tumbller Robot Control application is structured.
 - Each controller can restart independently
 - Easier debugging - isolate motor vs camera issues
 
-### 2. Manual Connection Workflow
+### 3. Manual Connection Workflow
 
 **Decision:** Explicit "Connect" button instead of auto-connect on robot selection.
 
@@ -78,7 +120,7 @@ disconnected → [Connect button] → connecting
                         disconnected     connecting
 ```
 
-### 3. Dual Camera Modes
+### 4. Dual Camera Modes
 
 **Full Interface Mode:**
 - Embeds ESP-CAM's /stream HTML page in iframe
@@ -95,7 +137,7 @@ disconnected → [Connect button] → connecting
 - Full Interface: For advanced users who want camera settings
 - Stream Only: For focused robot control experience
 
-### 4. State Management: Zustand + Persistence
+### 5. State Management: Zustand + Persistence
 
 **Why Zustand over Redux?**
 - Less boilerplate (no actions, reducers)
@@ -123,7 +165,7 @@ persist(
 - Camera status
 - Last motor command
 
-### 5. no-cors Mode for ESP32
+### 6. no-cors Mode for ESP32
 
 **Problem:** ESP32 firmware doesn't send CORS headers.
 
@@ -145,6 +187,10 @@ await fetch(url, {
 src/
 ├── components/
 │   ├── common/              # Reusable UI components
+│   │   ├── LoginButton.tsx       # Logto login trigger
+│   │   ├── LogoutButton.tsx      # Logto logout button
+│   │   ├── UserProfile.tsx       # User avatar/info display
+│   │   └── ProtectedRoute.tsx    # Auth route guard
 │   └── features/            # Feature-specific components
 │       ├── AddRobotForm.tsx      # Robot configuration form
 │       ├── CameraStream.tsx      # Dual-mode camera display
@@ -152,7 +198,14 @@ src/
 │       └── RobotConnection.tsx   # Connection management
 │
 ├── pages/
-│   └── RobotControlPage.tsx # Main application page
+│   ├── RobotControlPage.tsx # Main application page
+│   └── CallbackPage.tsx     # OAuth callback handler
+│
+├── providers/
+│   └── AuthProvider.tsx     # Conditional Logto wrapper
+│
+├── hooks/
+│   └── useAuth.ts           # Conditional auth hook
 │
 ├── stores/
 │   └── robotStore.ts        # Zustand store with persistence
@@ -170,11 +223,45 @@ src/
 ├── utils/
 │   └── env.ts               # Environment variable access
 │
-├── App.tsx                  # Root component with providers
-└── main.tsx                 # Entry point
+├── App.tsx                  # Root component with routing
+└── main.tsx                 # Entry point (AuthProvider wrapper)
 ```
 
 ## Data Flow
+
+### Authentication Flow (When Enabled)
+
+```
+User visits "/" → ProtectedRoute checks auth
+    ↓
+isAuthEnabled? → NO → Render children (no auth needed)
+    ↓ YES
+isAuthenticated? → NO → Show login page with LoginButton
+    ↓ YES
+hasInitiallyLoaded? → NO → Show loading spinner (first load only)
+    ↓ YES
+Render protected children (RobotControlPage)
+    ↓
+User clicks "Log In" → signIn(callbackUrl)
+    ↓
+Redirect to Logto → User enters credentials
+    ↓
+Logto redirects to /callback → CallbackPage
+    ↓
+useHandleSignInCallback() → Process OAuth response
+    ↓
+navigate('/') → Return to home page
+    ↓
+ProtectedRoute: isAuthenticated = true → Render app
+    ↓
+UserProfile fetches user info → Display avatar/name/email
+```
+
+**Key Points:**
+- `hasInitiallyLoaded` prevents reload loops from `isLoading` oscillation
+- After first auth check, page stays stable even if `isLoading` toggles
+- CallbackPage handles OAuth redirect transparently
+- UserProfile only fetches once, handles errors gracefully
 
 ### Adding a Robot
 

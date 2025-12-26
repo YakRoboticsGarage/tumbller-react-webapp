@@ -247,6 +247,191 @@ tumbller-react-webapp/
 
 ---
 
+## [1.1.0] - 2024-12-26
+
+### Added - Optional Authentication
+
+#### Logto Integration
+- Integrated `@logto/react` SDK (v4.0.10) for OAuth 2.0 / OIDC authentication
+- Optional authentication system controlled by `VITE_ENABLE_AUTH` environment variable
+- When disabled, app functions exactly as before (backward compatible)
+- When enabled, requires login before accessing robot control interface
+
+#### Authentication Components
+- **AuthProvider**: Conditional wrapper that only loads LogtoProvider when auth is enabled
+- **useAuth Hook**: Provides authentication state with mock data when auth is disabled
+- **ProtectedRoute**: Route guard component that shows login page when unauthenticated
+- **LoginButton**: Triggers OAuth sign-in flow with redirect to Logto
+- **LogoutButton**: Signs user out and clears session
+- **UserProfile**: Displays user avatar, name, and email after authentication
+- **CallbackPage**: Handles OAuth redirect after successful login
+
+#### Environment Variables
+- `VITE_ENABLE_AUTH` - Enable/disable authentication (default: false)
+- `VITE_LOGTO_ENDPOINT` - Logto cloud endpoint URL
+- `VITE_LOGTO_APP_ID` - Logto application ID
+
+#### User Experience
+- Login page appears first if auth is enabled
+- Smooth OAuth redirect flow to Logto
+- After login, redirects to robot control interface
+- User profile shows in header with avatar and email
+- Logout returns to login page
+- No authentication required if VITE_ENABLE_AUTH=false
+
+### Fixed - Authentication Issues
+
+#### Issue #6: Infinite Reload Loop After Login
+- **Problem**: Page continuously reloaded after successful Logto authentication
+- **Symptom**: "Checking authentication..." spinner appeared repeatedly in infinite loop
+- **Root Cause**: Logto's `useLogto()` hook's `isLoading` state oscillated between true/false even after successful auth
+- **Investigation Steps**:
+  1. Removed trailing slash from endpoint ❌
+  2. Added timeout logic ❌
+  3. Simplified CallbackPage ❌
+  4. Removed React StrictMode ❌
+  5. Added error handling in UserProfile ✓ (partial)
+  6. Identified `isLoading` oscillation as root cause ✓
+- **Solution**: Implemented `hasInitiallyLoaded` latch mechanism in ProtectedRoute
+  - Only shows loading spinner on very first load (`!hasInitiallyLoaded && isLoading`)
+  - Sets `hasInitiallyLoaded = true` when `isLoading` first becomes false
+  - Ignores subsequent `isLoading` toggles (from token refresh, state revalidation)
+  - Page stays stable after initial authentication check
+- **Files Modified**:
+  - `src/components/common/ProtectedRoute.tsx`
+  - `src/pages/RobotControlPage.tsx`
+
+#### Double Hook Call Issue
+- **Problem**: `useLogto()` was called twice (ProtectedRoute and RobotControlPage)
+- **Solution**: Removed redundant `useAuth()` call from RobotControlPage
+- **Result**: Simplified component and eliminated unnecessary re-renders
+
+#### Conditional Rendering Cleanup
+- **Problem**: Redundant `isAuthenticated` checks after ProtectedRoute already verified auth
+- **Solution**: Removed conditional rendering based on `isAuthenticated` in protected pages
+- **Result**: Cleaner code, since ProtectedRoute guarantees authentication
+
+### Changed - Application Structure
+
+#### Removed React StrictMode
+- Removed `<StrictMode>` wrapper from `src/main.tsx`
+- Reason: Double-rendering in development mode can interfere with OAuth libraries
+- No impact on production builds
+
+#### Updated App Entry Point
+- Added AuthProvider wrapper in `src/main.tsx`
+- AuthProvider conditionally wraps app with LogtoProvider based on `VITE_ENABLE_AUTH`
+
+#### New Route
+- Added `/callback` route for OAuth redirect handling
+- CallbackPage component processes authentication callback and redirects to home
+
+#### Protected Main Route
+- Wrapped RobotControlPage with ProtectedRoute component
+- Route now requires authentication when enabled
+
+### Technical Implementation
+
+#### Conditional Provider Pattern
+```typescript
+// Only wraps with LogtoProvider when auth is enabled
+if (!isAuthEnabled) {
+  return <>{children}</>;
+}
+
+return <LogtoProvider config={config}>{children}</LogtoProvider>;
+```
+
+#### Latch Mechanism for Stable Auth State
+```typescript
+const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+useEffect(() => {
+  if (!isLoading && !hasInitiallyLoaded) {
+    setHasInitiallyLoaded(true);
+  }
+}, [isLoading, hasInitiallyLoaded]);
+
+// Only show loading on first load, ignore subsequent toggles
+if (!hasInitiallyLoaded && isLoading) {
+  return <LoadingSpinner />;
+}
+```
+
+#### Mock Authentication Data
+- When auth is disabled, useAuth returns mock data with `isAuthenticated: true`
+- Prevents need for conditional logic throughout the app
+- Maintains type safety with same return interface
+
+### Dependencies
+
+#### Added
+- `@logto/react` 4.0.10 - Logto React SDK for OAuth authentication
+
+### Documentation
+
+#### Updated
+- `docs/dev/problems-solved.md` - Added Problem #6 (Logto infinite reload loop)
+- `docs/dev/session-context.md` - Updated to v1.1.0 with auth features
+- `docs/dev/changelog.md` - This file
+- `docs/dev/architecture.md` - Added authentication layer documentation
+- `.env.example` - Added Logto configuration template
+
+### Configuration
+
+#### New Files
+- `src/providers/AuthProvider.tsx` - Conditional Logto wrapper
+- `src/hooks/useAuth.ts` - Authentication hook with conditional logic
+- `src/components/common/ProtectedRoute.tsx` - Route guard
+- `src/components/common/LoginButton.tsx` - Login button component
+- `src/components/common/LogoutButton.tsx` - Logout button component
+- `src/components/common/UserProfile.tsx` - User info display
+- `src/pages/CallbackPage.tsx` - OAuth callback handler
+
+#### Modified Files
+- `src/main.tsx` - Added AuthProvider, removed StrictMode
+- `src/App.tsx` - Added /callback route, wrapped home with ProtectedRoute
+- `src/pages/RobotControlPage.tsx` - Integrated auth UI components
+- `src/vite-env.d.ts` - Added Logto environment variable types
+- `.env.example` - Added auth configuration
+
+### Backward Compatibility
+
+- **100% backward compatible** when `VITE_ENABLE_AUTH=false` (default)
+- No changes to robot control functionality
+- No changes to camera streaming
+- No changes to motor controls
+- Authentication is purely opt-in feature
+
+### Known Limitations
+
+1. **OAuth Flow**: Requires redirect to external Logto service
+2. **Logto Cloud**: Requires Logto account and app configuration
+3. **Local Development**: Callback URL must be configured in Logto dashboard
+4. **Session Persistence**: Uses Logto's built-in session management
+
+### Migration Guide
+
+To enable authentication in existing installation:
+
+1. Sign up for Logto Cloud account
+2. Create application and get endpoint + app ID
+3. Configure callback URL: `http://localhost:5173/callback` (development)
+4. Update `.env`:
+   ```env
+   VITE_ENABLE_AUTH=true
+   VITE_LOGTO_ENDPOINT=https://your-tenant.logto.app
+   VITE_LOGTO_APP_ID=your_app_id
+   ```
+5. Restart development server
+
+To disable authentication:
+```env
+VITE_ENABLE_AUTH=false
+```
+
+---
+
 ## [Unreleased]
 
 Ideas for future versions - see [future-improvements.md](future-improvements.md)

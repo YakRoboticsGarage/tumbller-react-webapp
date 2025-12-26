@@ -2,19 +2,20 @@
 
 Current state of the project for continuing development.
 
-**Last Updated:** December 26, 2024 (v1.0.0)
+**Last Updated:** December 26, 2024 (v1.1.0)
 
 ---
 
 ## Project Status
 
-✅ **v1.0.0 Complete** - All core features implemented and working
+✅ **v1.1.0 Complete** - Core features + Optional Authentication
 
 **Completed Features:**
 - Multi-robot management with persistent storage
 - Manual connection workflow (explicit Connect button)
 - Motor controls (forward/back/left/right)
 - Dual-mode camera display (iframe + stream only)
+- **Optional Logto authentication** (new in v1.1.0)
 - Custom orange/yellow/brown theme
 - Environment variable configuration
 - Comprehensive documentation
@@ -62,6 +63,10 @@ Current state of the project for continuing development.
 - ✅ Stream image centered
 - ✅ Retry tolerance prevents immediate errors
 - ✅ Theme consistent across all components
+- ✅ Optional Logto authentication works without reload loops
+- ✅ Login flow redirects correctly
+- ✅ User profile displays after authentication
+- ✅ Logout functionality works
 
 ---
 
@@ -96,6 +101,7 @@ All issues from development have been resolved:
 - ✅ Camera stream errors → Fixed with retry tolerance and preloading
 - ✅ Stream left-aligned → Fixed with flex centering
 - ✅ Wrong button colors → Fixed colorScheme usage
+- ✅ Logto infinite reload loop → Fixed with hasInitiallyLoaded latch mechanism
 
 ---
 
@@ -126,6 +132,11 @@ pnpm check            # All quality checks
 VITE_DEFAULT_ROBOT_NAME=Tumbller-1
 VITE_DEFAULT_MOTOR_IP=192.168.1.100
 VITE_DEFAULT_CAMERA_IP=192.168.1.101
+
+# Optional Logto Authentication
+VITE_ENABLE_AUTH=false
+VITE_LOGTO_ENDPOINT=
+VITE_LOGTO_APP_ID=
 ```
 
 ---
@@ -192,21 +203,44 @@ This gives progressive context disclosure:
 
 ---
 
-## Recent Changes (v1.0.0)
+## Recent Changes (v1.1.0)
 
-**Last Development Session (December 26, 2024):**
+**Latest Development Session (December 26, 2024):**
 
-1. Created modular documentation structure
-2. Implemented progressive disclosure per HumanLayer best practices
-3. Split large DEVELOPMENT.md into topic-specific files
-4. Created comprehensive guides for continuity
+### Added Features
+1. **Optional Logto Authentication Integration**
+   - Integrated `@logto/react` SDK for OAuth authentication
+   - Created AuthProvider with conditional wrapping (enabled via env var)
+   - Implemented useAuth hook with mock data when auth disabled
+   - Added ProtectedRoute component for route protection
+   - Created CallbackPage for OAuth redirect handling
+   - Added LoginButton, LogoutButton, and UserProfile components
 
-**No Code Changes** - Documentation only
+### Fixed Issues
+2. **Logto Infinite Reload Loop**
+   - Problem: `isLoading` state oscillating after successful login
+   - Solution: Implemented `hasInitiallyLoaded` latch mechanism
+   - Result: Page loads once and stays stable
 
-**Previous Working Code** maintained in:
-- All `src/` files
-- Theme in `src/theme/index.ts`
-- Components stable and functional
+3. **Documentation Updates**
+   - Updated problems-solved.md with Logto integration issue
+   - Updated session-context.md (this file)
+   - Updated changelog.md with v1.1.0 changes
+   - Updated architecture.md with authentication layer
+
+**Code Changes:**
+- New: `src/providers/AuthProvider.tsx`
+- New: `src/hooks/useAuth.ts`
+- New: `src/components/common/ProtectedRoute.tsx`
+- New: `src/components/common/LoginButton.tsx`
+- New: `src/components/common/LogoutButton.tsx`
+- New: `src/components/common/UserProfile.tsx`
+- New: `src/pages/CallbackPage.tsx`
+- Modified: `src/main.tsx` (removed StrictMode, added AuthProvider)
+- Modified: `src/App.tsx` (added /callback route, ProtectedRoute wrapper)
+- Modified: `src/pages/RobotControlPage.tsx` (integrated auth UI)
+- Modified: `src/vite-env.d.ts` (added Logto env vars)
+- Modified: `.env.example` (added Logto configuration)
 
 ---
 
