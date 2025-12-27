@@ -14,21 +14,24 @@ import { useRobotStore } from '../../stores/robotStore'
 import type { RobotConfig } from '../../types'
 import { generateUUID } from '../../utils/uuid'
 
+// Accept IP address (with optional port) or mDNS hostname (e.g., esp32.local)
+const hostOrIpRegex = /^((\d{1,3}\.){3}\d{1,3}|[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)(:\d+)?$/
+
 const robotFormSchema = z.object({
   name: z.string().min(1, 'Robot name is required'),
   motorIp: z
     .string()
-    .min(1, 'Motor IP is required')
+    .min(1, 'Motor controller address is required')
     .regex(
-      /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/,
-      'Must be a valid IP address (e.g., 192.168.1.100 or 192.168.1.100:80)'
+      hostOrIpRegex,
+      'Must be a valid IP address or hostname (e.g., 192.168.1.100 or esp32-motor.local)'
     ),
   cameraIp: z
     .string()
-    .min(1, 'Camera IP is required')
+    .min(1, 'Camera address is required')
     .regex(
-      /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/,
-      'Must be a valid IP address (e.g., 192.168.1.101 or 192.168.1.101:81)'
+      hostOrIpRegex,
+      'Must be a valid IP address or hostname (e.g., 192.168.1.101 or esp32-cam.local)'
     ),
 })
 
@@ -84,19 +87,19 @@ export function AddRobotForm({ onSuccess }: AddRobotFormProps) {
         </FormControl>
 
         <FormControl isInvalid={!!errors.motorIp}>
-          <FormLabel>Motor Controller IP (ESP32S3)</FormLabel>
+          <FormLabel>Motor Controller (ESP32S3)</FormLabel>
           <Input
             {...register('motorIp')}
-            placeholder="192.168.1.100"
+            placeholder="192.168.1.100 or esp32-motor.local"
           />
           <FormErrorMessage>{errors.motorIp?.message}</FormErrorMessage>
         </FormControl>
 
         <FormControl isInvalid={!!errors.cameraIp}>
-          <FormLabel>Camera IP (ESP-CAM)</FormLabel>
+          <FormLabel>Camera (ESP-CAM)</FormLabel>
           <Input
             {...register('cameraIp')}
-            placeholder="192.168.1.101"
+            placeholder="192.168.1.101 or esp32-cam.local"
           />
           <FormErrorMessage>{errors.cameraIp?.message}</FormErrorMessage>
         </FormControl>
